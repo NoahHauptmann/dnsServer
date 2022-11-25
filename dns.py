@@ -9,6 +9,7 @@ sock.bind((ip, port))
 
 def load_zone():
 
+    #Loads information of all zone files in the "zones" directory
     jsonZone = {}
     zoneFiles = glob.glob('zones/*.zone')
     
@@ -32,6 +33,7 @@ def get_domain_question(data):
     x = 0
     totalLength = 0
 
+    # Parses domain name
     for byte in data:
         if state == 1:
             domainStr += chr(byte)
@@ -48,6 +50,7 @@ def get_domain_question(data):
             expectedlength=byte
         totalLength +=1
 
+    #Parses question type
     questionType = data[totalLength+1:totalLength+3]
 
     return (domainParts, questionType)
@@ -75,26 +78,32 @@ def get_flags(flags):
     byte1 = bytes(flags[0:1])
     byte2 = bytes(flags[1:2])
 
+    #Copies OPCode flags from the request
     OPCode = ''
     for bit in range(1,5):
         OPCode += str(ord(byte1)&(1<<bit))
 
+    #Our answer is authoritative
     AA = '1'
 
     TC = '0'
 
+    #No recursion desired
     RD = '0'
 
+    #No recursion available for our local server
     RA = '0'
 
     Z = '000'
 
-    RCODE = '0000' #Room for improvement
+    #No error is returned, could be implemented in the future
+    RCODE = '0000'
 
     return int(QR+OPCode+AA+TC+RD,2).to_bytes(1, byteorder='big')+int(RA+Z+RCODE).to_bytes(1, byteorder='big')
 
 def build_question(domainname, rectype):
     qbytes = b''
+    #Represents the domain in the format required by DNS
     for part in domainname:
         length = len(part)
         qbytes += bytes([length])
